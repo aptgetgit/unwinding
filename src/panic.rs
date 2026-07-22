@@ -7,6 +7,9 @@ use crate::abi::*;
 pub use crate::panic_handler::*;
 use crate::panicking::Exception;
 
+// Per runtime instance address, stored in each exception and verified on catch,
+// so a MOZ\0RUST panic from a different Rust runtime is rejected with an abort instead of being misinterpreted as ours,
+// which would cause a UB.
 static CANARY: u8 = 0;
 
 #[repr(transparent)]
@@ -14,6 +17,9 @@ struct RustPanic(Box<dyn Any + Send>, DropGuard);
 
 struct DropGuard;
 
+// DropGuard is a zero-cost tripwire that aborts if a panic payload is destroyed outside Rust's own catch path (catch_unwind flow below),
+// chiefly when foreign code catches a Rust panic and deletes(Unwind DeleteException) it instead of rethrowing,
+// converting a silently swallowed panic into a loud abort.
 impl Drop for DropGuard {
     fn drop(&mut self) {
         #[cfg(feature = "panic-handler")]
@@ -60,6 +66,7 @@ unsafe impl Exception for RustPanic {
 }
 
 pub fn begin_panic(payload: Box<dyn Any + Send>) -> UnwindReasonCode {
+    // Shoudn't return back in happy path!
     crate::panicking::begin_panic(RustPanic(payload, DropGuard))
 }
 
@@ -67,6 +74,7 @@ pub fn catch_unwind<R, F: FnOnce() -> R>(f: F) -> Result<R, Box<dyn Any + Send>>
     #[cold]
     fn process_panic(p: Option<RustPanic>) -> Box<dyn Any + Send> {
         match p {
+            // Foreign Exception
             None => {
                 #[cfg(feature = "panic-handler")]
                 {
@@ -74,6 +82,7 @@ pub fn catch_unwind<R, F: FnOnce() -> R>(f: F) -> Result<R, Box<dyn Any + Send>>
                 }
                 crate::util::abort();
             }
+            // Rust's Panic, forget the drop guard and return the Box.
             Some(e) => {
                 #[cfg(feature = "panic-handler")]
                 {

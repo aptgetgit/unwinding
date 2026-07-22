@@ -40,6 +40,8 @@ compile_error!("Current architecture is not supported");
 
 // CFI directives cannot be used if neither debuginfo nor panic=unwind is enabled.
 // We don't have an easy way to check the former, so just check based on panic strategy.
+// where CFI: Call Frame Information used to Calculate CFA: Call Frame Address.
+// Returns the empty char if panic is on abort, as we won't be unwinding.
 #[cfg(panic = "abort")]
 macro_rules! maybe_cfi {
     ($x: literal) => {
@@ -47,6 +49,7 @@ macro_rules! maybe_cfi {
     };
 }
 
+// Returns the provided literal unchanged as CFI directives are needed for unwinding, when panic is set to unwind.
 #[cfg(panic = "unwind")]
 macro_rules! maybe_cfi {
     ($x: literal) => {

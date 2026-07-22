@@ -1,6 +1,7 @@
 #![doc = include_str!("../README.md")]
 // We use `non_exhaustive_omitted_patterns_lint` which is a nightly lint.
 #![allow(unknown_lints)]
+// Supress warning about using Rust compiler internal features.
 #![cfg_attr(
     any(
         feature = "personality",
@@ -10,10 +11,12 @@
     ),
     allow(internal_features)
 )]
+// Enable nightly compiler feature lang_items.
 #![cfg_attr(
     any(feature = "personality", feature = "personality-dummy"),
     feature(lang_items)
 )]
+// Enable nightly compiler feature core_intrinsics.
 #![cfg_attr(
     any(
         feature = "panicking",
@@ -24,9 +27,11 @@
     ),
     feature(core_intrinsics)
 )]
+// Enable nightly compiler feature thread local.
 #![cfg_attr(feature = "panic-handler", feature(thread_local))]
 #![no_std]
 
+// Import the `alloc` crate only when the `alloc` Cargo feature is enabled.
 #[cfg(feature = "alloc")]
 extern crate alloc;
 

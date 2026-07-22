@@ -1,0 +1,43 @@
+{
+    "lsp": {
+        "rust-analyzer": {
+            "initialization_options": {
+                "inlayHints": {
+                    "maxLength": null,
+                    "lifetimeElisionHints": {
+                        "enable": "skip_trivial",
+                        "useParameterNames": true
+                    },
+                    "closureReturnTypeHints": {
+                        "enable": "always"
+                    }
+                },
+                "cargo": {
+                    "target": "aarch64-unknown-linux-gnu",
+                    "noDefaultFeatures": true,
+                    "features": [
+                        "alloc",
+                        "hide-trace",
+                        "unwinder",
+                        "fde-static",
+                        "panic",
+                        "panicking",
+                        "spin",
+                        "personality"
+                    ],
+                    "extraArgs": [
+                        "--profile",
+                        "dev"
+                    ],
+                    "allTargets": false
+                },
+                "rust": {
+                    "analyzerTargetDir": true
+                },
+                "cfg": {
+                    "setTest": false
+                }
+            }
+        }
+    }
+}

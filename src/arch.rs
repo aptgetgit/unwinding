@@ -63,6 +63,12 @@ mod aarch64 {
         pub const SP: Register = AArch64::SP;
         pub const RA: Register = AArch64::X30;
 
+        // UNWIND_DATA_REG: registers used to pass data into a landing pad (Drop
+        // cleanup code) when control jumps there during a Rust panic: X0 = the
+        // exception/payload pointer, X1 = a selector telling it which action to
+        // take(ex- run cleanup next, before unwinding further). Per the Itanium C++ ABI convention Rust's unwinder follows;
+        // X0/X1 match AAPCS64's first-arg registers.
+        // UNWIND_PRIVATE_DATA_SIZE: number of such registers (arch-generic constant).
         pub const UNWIND_DATA_REG: (Register, Register) = (AArch64::X0, AArch64::X1);
         pub const UNWIND_PRIVATE_DATA_SIZE: usize = 2;
     }

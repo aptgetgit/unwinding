@@ -3,14 +3,6 @@
 version = 4
 
 [[package]]
-name = "catch_std_exception"
-version = "0.1.0"
-dependencies = [
- "libc",
- "unwinding",
-]
-
-[[package]]
 name = "gimli"
 version = "0.34.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -25,13 +17,6 @@ name = "libc"
 version = "0.2.186"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68ab91017fe16c622486840e4c83c9a37afeff978bd239b5293d61ece587de66"
-
-[[package]]
-name = "panic_abort_no_debuginfo"
-version = "0.1.0"
-dependencies = [
- "unwinding",
-]
 
 [[package]]
 name = "rustc-std-workspace-alloc"
@@ -52,22 +37,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8abadc99fd9c7bbb7d0ca2b31d72a067d0c0dcd7aad25ab8cac71ba91417694b"
 
 [[package]]
-name = "std_catch_exception"
-version = "0.1.0"
-dependencies = [
- "libc",
- "unwinding",
-]
-
-[[package]]
-name = "throw_and_catch"
-version = "0.1.0"
-dependencies = [
- "libc",
- "unwinding",
-]
-
-[[package]]
 name = "unwinding"
 version = "0.2.10"
 dependencies = [
@@ -75,12 +44,4 @@ dependencies = [
  "libc",
  "rustc-std-workspace-core",
  "spin",
-]
-
-[[package]]
-name = "unwinding_dyn"
-version = "0.1.0"
-dependencies = [
- "libc",
- "unwinding",
 ]

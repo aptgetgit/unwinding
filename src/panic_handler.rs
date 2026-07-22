@@ -7,9 +7,13 @@ use core::ffi::c_void;
 use core::panic::{Location, PanicInfo};
 use core::sync::atomic::{AtomicI32, Ordering};
 
+// Thread local panic count, since unwinding happens on the stack of a particular thread,
+// Panic count prenvents two unwinds running on the same stack, cause it will clobber the stack!
 #[thread_local]
 static PANIC_COUNT: Cell<usize> = Cell::new(0);
 
+// Passes -lc to the linker, aka link against libc,
+// since this crate is no_std, but we are using libc fns below!
 #[link(name = "c")]
 unsafe extern "C" {}
 
@@ -34,6 +38,7 @@ fn check_env() -> bool {
     }
 
     let val = unsafe {
+        // Get RUST BACKTRACE env value
         let ptr = libc::getenv(b"RUST_BACKTRACE\0".as_ptr() as _);
         if ptr.is_null() {
             b""
@@ -59,6 +64,7 @@ fn stack_trace() {
     struct CallbackData {
         counter: usize,
     }
+    // `UnwindTraceFn`, callback fn, increment the counter, and print the return address.
     extern "C" fn callback(unwind_ctx: &UnwindContext<'_>, arg: *mut c_void) -> UnwindReasonCode {
         let data = unsafe { &mut *(arg as *mut CallbackData) };
         data.counter += 1;
@@ -69,21 +75,27 @@ fn stack_trace() {
         );
         UnwindReasonCode::NO_REASON
     }
+    // Init the Counter.
     let mut data = CallbackData { counter: 0 };
+    // Pass the callback.
     _Unwind_Backtrace(callback, &mut data as *mut _ as _);
 }
 
 fn do_panic(msg: Box<dyn Any + Send>) -> ! {
+    // Abort if panicked during panic!
     if PANIC_COUNT.get() >= 1 {
         stack_trace();
         eprintln!("thread panicked while processing panic. aborting.");
         crate::util::abort();
     }
     PANIC_COUNT.set(1);
+    // If Bakctrace is enabled, do a stack trace first!
     if check_env() {
         stack_trace();
     }
+    // Wrap the Rust panic type to C exception type and Raise Exception.
     let code = crate::panic::begin_panic(Box::new(msg));
+    // Raise Exception will never return in success case, something is wrong, thus abort.
     eprintln!("failed to initiate panic, error {}", code.0);
     crate::util::abort();
 }
@@ -96,6 +108,9 @@ fn panic(info: &PanicInfo<'_>) -> ! {
     do_panic(Box::new(NoPayload))
 }
 
+// #[track_caller] makes the compiler pass a hidden &Location argument holding the call site,
+// so Location::caller() inside the function reports where it was called from rather than its own line
+// and it propagates up through other #[track_caller] callers to the first untracked one.
 #[track_caller]
 pub fn panic_any<M: 'static + Any + Send>(msg: M) -> ! {
     eprintln!("panicked at {}", Location::caller());
